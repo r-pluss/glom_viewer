@@ -1,0 +1,9 @@
+{
+    "name": "glom-desktop",
+    "description": "Client for glom protocol built with Electron",
+    "version": "0.0.1",
+    "main": "./main.js",
+    "scripts": {
+        "start": "electron ."
+    }
+}

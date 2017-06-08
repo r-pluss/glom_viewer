@@ -1,0 +1,41 @@
+<!DOCTYPE hmtl>
+<html>
+<head>
+    <link rel= 'stylesheet' href= './css/bulma.css'>
+    <link rel= 'stylesheet' href= './css/font_awesome/css/font-awesome.min.css'>
+    <link rel= 'stylesheet' href= './css/style.css'>
+</head>
+<body>
+    <main>
+        <div id= 'app-root'>
+            <nav id= 'head-nav' class= 'nav has-shadow'>
+                <div class= 'nav-right'>
+                    <div class= 'field'>
+                        <p class= 'control has-icon-left has-icons-left'>
+                            <input id= 'tag-search' class= 'input' type= 'search' placeholder= 'search by tag'>
+                            <span class= 'icon is-left'>
+                                <i class= 'fa fa-search'></i>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </nav>
+            <div id= 'glom-view' class= 'container'>
+                <div class= 'tile is-ancestor'>
+                    <template v-for= "item in selectedMedia">
+                        <div class= 'tile media-container'>
+                            <a class= 'media-link' target= '_blank' :href= "getGlomSource(item)">
+                                <img :src= "getGlomSource(item)"/>
+                            </a>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src= 'https://unpkg.com/vue'></script>
+    <script src= 'https://unpkg.com/axios/dist/axios.min.js'></script>
+    <script src= './js/picomodal.electron.js'></script>
+    <script src= './js/app.js'></script>
+</body>
+</html>

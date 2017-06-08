@@ -1,0 +1,26 @@
+main {
+    background: #ddd;
+    height: 100vh;
+}
+
+.media-container {
+    max-width: 20vw;
+}
+
+.media-link {
+    height: auto;
+    max-width: 100%
+}
+
+#head-nav {
+    background-color: #b387e4;
+    padding: .75vh .5vw;
+}
+
+#glom-view {
+    height: auto;
+}
+
+#tag-search {
+    min-width: 20vw;
+}
