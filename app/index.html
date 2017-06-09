@@ -12,11 +12,18 @@
                 <div class= 'nav-right'>
                     <div class= 'field'>
                         <p class= 'control has-icon-left has-icons-left'>
-                            <input id= 'tag-search' class= 'input' type= 'search' placeholder= 'search by tag'>
+                            <input id= 'tag-search' class= 'input'
+                                type= 'search' placeholder= 'search by tag'
+                                @keyup.enter.self= "queryUserInput">
                             <span class= 'icon is-left'>
                                 <i class= 'fa fa-search'></i>
                             </span>
                         </p>
+                    </div>
+                    <div id= 'open-settings' @click= "showUserSettings">
+                        <span class= 'icon is-medium'>
+                            <i class= 'fa fa-cogs'></i>
+                        </span>
                     </div>
                 </div>
             </nav>
