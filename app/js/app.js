@@ -23,6 +23,10 @@ const vueApp = new Vue({
 });
 
 
+//TODO:
+//see https://github.com/asciidoctor/asciidoctor/issues/1301 to begin investigation into properly displaying svg 
+
+
 //strictly for debugging ease
 window._$app = vueApp;
 
