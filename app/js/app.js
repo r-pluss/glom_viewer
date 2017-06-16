@@ -97,87 +97,7 @@ function findMediaByTags(qry){
     }
     return results;
 }
-/*
-function _findMediaByTags(qry){
-    results = [];
-    for(let item of vueApp.allMedia){
-        //opt for short-circuiting behavior of exclusions first
-        if(qry.exclude.length > 0){
-            for(let exclusion of qry.exclude){
-                if(Array.isArray(exclusion)){
-                    let exclusionFound = false;
-                    for(let _exclusion of exclusion){
-                        if(item.tags.indexOf(_exclusion) > -1){
-                            console.log(`Flag #1 - exclusion '${_exclusion}' found.`);
-                            exclusionFound = true;
-                            break;
-                        }
-                    }
-                    if(exclusionFound){
-                        break;
-                    }
-                }else{
-                    if(item.tags.indexOf(exclusion) > -1){
-                        console.log(`Flag #2 - exclusion '${exclusion}' found.`);
-                        break;
-                    }
-                }
-            }
-        }
-        //now throw out anything that lacks a required tag, if it doesn't fail any test, keep it
-        if(qry.require.length > 0){
-            for(let requirement of qry.require){
-                if(Array.isArray(requirement)){
-                    let requirementMissing = false;
-                    for(let _requirement of requirement){
-                        if(item.tags.indexOf(_requirement) < 0){
-                            console.log(`Flag #3 - requirement '${_requirement}' not found.`);
-                            requirementMissing = true;
-                            break;
-                        }
-                    }
-                    if(requirementMissing){
-                        break;
-                    }
-                }else{
-                    if(item.tags.indexOf(requirement) < 0){
-                        console.log(`Flag #4 - requirement '${requirement}' not found.`);
-                        break;
-                    }
-                }
-            }
-            results.push(item);
-            break;
-        }
-        //finally, if it contains any included tags, keep it
-        if(qry.include.length > 0){
-            for(let inclusion of qry.include){
-                if(Array.isArray(inclusion)){
-                    let inclusionFound = false;
-                    for(let _inclusion of inclusion){
-                        if(item.tags.indexOf(_inclusion) > -1){
-                            console.log(`Flag #5 - inclusion '${_inclusion}' not found.`);
-                            inclusionFound = true;
-                            results.push(item);
-                            break;
-                        }
-                    }
-                    if(inclusionFound){
-                        break;
-                    }
-                }else{
-                    if(item.tags.indexOf(inclusion) > -1){
-                        console.log(`Flag #6 - inclusion '${inclusion}' not found.`);
-                        results.push(item);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    return results;
-}
-*/
+
 function flattenQryParams(params){
     flat = {};
     for(let k in params){
@@ -229,6 +149,10 @@ function getUserMedia(usr){
         }
     ).then(
         function(response){
+            let elem = document.getElementById('current-user');
+            elem.classList.remove('not-logged-in');
+            elem.classList.add('logged-in');
+            elem.innerHTML = usr;
             for(let item of response.data.media_list){
                 extractUniqueTags(item);
                 vueApp.allMedia.push(item);
