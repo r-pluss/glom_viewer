@@ -3,6 +3,11 @@ main {
     height: 100vh;
 }
 
+.logged-in {
+    border-color: #63d3f3;
+    color: #24c4ea;
+}
+
 .media-container {
     background-color: #eee;
     padding: 15px;
@@ -13,6 +18,21 @@ main {
 .media-link {
     height: auto;
     max-width: 100%
+}
+
+.not-logged-in {
+    border-color: #fb1c85;
+    color: #b4bcc3;
+}
+
+#current-user {
+    background-color: #dee4ef;
+    border-radius: 100px;
+    border-style: solid;
+    border-width: 1px;
+    font-weight: bold;
+    margin-left: 20px;
+    padding: 3.5px
 }
 
 #head-nav {
