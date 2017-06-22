@@ -6,25 +6,39 @@ const appDataPath = path.join(app.getPath('userData'), 'config.json');
 
 const $http = createConnection();
 
+/*
+Vue.config.keyCodes = {
+    embiggen: [107, 187],
+    unbiggen: [109, 189]
+};
+*/
+
 const vueApp = new Vue({
+    created: afterCreation,
     el: '#app-root',
     data: {
         allMedia: [],
         baseURL: undefined,
+        mediaScale: 'small',
+        mediaScales: ['small', 'medium', 'full'],
         selectedMedia: [],
         uniqueTags: []
     },
     methods: {
+        embiggen: embiggen,
         getGlomSource: getGlomSource,
+        mediaType: mediaType,
+        openInBrowser: openInBrowser,
         queryUserInput: queryUserInput,
-        showUserSettings: showUserSettings
+        showUserSettings: showUserSettings,
+        unbiggen: unbiggen
     },
     mounted: start
 });
 
 
 //TODO:
-//see https://github.com/asciidoctor/asciidoctor/issues/1301 to begin investigation into properly displaying svg 
+//see https://github.com/asciidoctor/asciidoctor/issues/1301 to begin investigation into properly displaying svg
 
 
 //strictly for debugging ease
@@ -39,6 +53,10 @@ function start(){
     }
 }
 
+function afterCreation(){
+    registerGlobalEventHandlers();
+}
+
 function createConnection(){
     let config = getConfig();
     if(config.hostname){
@@ -51,6 +69,13 @@ function createConnection(){
     }else{
         console.log('No hostname in config.');
         return undefined;
+    }
+}
+
+function embiggen(){
+    let pos = vueApp.mediaScales.indexOf(vueApp.mediaScale);
+    if(pos < (vueApp.mediaScales.length - 1)){
+        vueApp.mediaScale = vueApp.mediaScales[pos + 1];
     }
 }
 
@@ -70,21 +95,21 @@ function findMediaByTags(qry){
         let inclusionFound = false;
         for(let exclusion of qry.exclude){
             if(item.tags.indexOf(exclusion) > -1){
-                console.log('Found exclusion');
+                //console.log('Found exclusion');
                 exclusionFound = true;
                 break;
             }
         }
         for(let requirement of qry.require){
             if(item.tags.indexOf(requirement) < 0){
-                console.log('Requirement missing');
+                //console.log('Requirement missing');
                 requirementMissing = true;
                 break;
             }
         }
         for(let inclusion of qry.include){
             if(item.tags.indexOf(inclusion) > -1){
-                console.log('Found inclusion');
+                //console.log('Found inclusion');
                 inclusionFound = true;
                 break;
             }
@@ -165,6 +190,22 @@ function getUserMedia(usr){
     )
 }
 
+function mediaType(item){
+    if(item.media_type === 'image'){
+        if(item.mime_type === 'image/svg+xml'){
+            return 'svg';
+        }else{
+            return 'img';
+        }
+    }else if(item.media_type === 'video'){
+        return 'video';
+    }
+}
+
+function openInBrowser(glomItem){
+    remote.shell.openExternal(`${vueApp.baseURL}/media/${glomItem.filename}`);
+}
+
 function parseSearch(qry){
     let opTokens = ['+', '-', '!', '&', '(', ')', '|'];
     let opTokenDefs = {
@@ -186,6 +227,11 @@ function parseSearch(qry){
     let groupMode = false;
     let i = 0;
 
+
+    //handle a couple explicit special cases first
+    if(qry === '*'){
+        return params;
+    }
     qry = qry.split('');
     for(let char of qry){
         if(opTokens.indexOf(char) > -1){
@@ -223,15 +269,27 @@ function parseSearch(qry){
     return params;
 }
 
+function registerGlobalEventHandlers(){
+    window.addEventListener('keyup', function(e){
+        if(e.ctrlKey && ['+', '-'].indexOf(e.key) > -1){
+            if(e.key === '+'){
+                embiggen();
+            }else{
+                unbiggen();
+            }
+        }
+    });
+}
+
 function queryUserInput(){
     let qry = document.getElementById('tag-search').value;
-    console.log(qry);
+    if(qry.trim() === ''){
+        vueApp.selectedMedia = [];
+        return;
+    }
     let qryParams = parseSearch(qry);
-    console.log(qryParams);
     let flatParams = flattenQryParams(qryParams);
-    console.log(flatParams);
     let matchedItems = findMediaByTags(flatParams);
-    console.log(matchedItems);
     vueApp.selectedMedia = matchedItems;
 }
 
@@ -297,4 +355,11 @@ function showUserSettings(){
     });
     modal.afterClose(function(mod){mod.destroy();});
     modal.show();
+}
+
+function unbiggen(){
+    let pos = vueApp.mediaScales.indexOf(vueApp.mediaScale);
+    if(pos > 0){
+        vueApp.mediaScale = vueApp.mediaScales[pos - 1];
+    }
 }
