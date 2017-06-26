@@ -42,6 +42,14 @@ main {
 }
 */
 
+.media-manager-table-label {
+    color: #f42fff;
+}
+
+.media-manager-table-value {
+    color: #dfe7e8;
+}
+
 .not-logged-in {
     border-color: #fb1c85;
     color: #b4bcc3;
@@ -64,6 +72,11 @@ main {
 
 #glom-view {
     height: auto;
+}
+
+#media-manager-table {
+    border-collapse: separate;
+    border-spacing: 6px;
 }
 
 #open-settings {
