@@ -208,13 +208,19 @@ function getUserMedia(usr){
 function manageMediaItem(item){
     let img = `<img src= "${vueApp.baseURL}/media/${item.filename}">`;
     let fileDetails = `<div>
-        <table>
+        <table id= 'media-manager-table'>
             <tbody>
                 <tr>
-                    <td>Filename:</td>
-                    <td>${item.filename}</td>
-                    <td>MimeType:</td>
-                    <td>${item.mime_type}</td>
+                    <td class= 'media-manager-table-label'>Filename:</td>
+                    <td class= 'media-manager-table-value'>${item.filename}</td>
+                    <td class= 'media-manager-table-label'>MimeType:</td>
+                    <td class= 'media-manager-table-value'>${item.mime_type}</td>
+                </tr>
+                <tr>
+                    <td class= 'media-manager-table-label'>Height:</td>
+                    <td class= 'media-manager-table-value'>${item.height}</td>
+                    <td class= 'media-manager-table-label'>Width:</td>
+                    <td class= 'media-manager-table-value'>${item.width}</td>
                 </tr>
             </tbody>
         </table>
