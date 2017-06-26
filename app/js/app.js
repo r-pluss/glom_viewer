@@ -22,11 +22,13 @@ const vueApp = new Vue({
         mediaScale: 'small',
         mediaScales: ['small', 'medium', 'full'],
         selectedMedia: [],
+        tagTester: undefined, // <-- not sure what that was supposed to be for...
         uniqueTags: []
     },
     methods: {
         embiggen: embiggen,
         getGlomSource: getGlomSource,
+        manageMediaItem: manageMediaItem,
         mediaType: mediaType,
         openInBrowser: openInBrowser,
         queryUserInput: queryUserInput,
@@ -51,6 +53,19 @@ function start(){
     }else{
         vueApp.showUserSettings();
     }
+}
+
+function addItemTagToServer(media_id, tag){
+    $http({
+        method: 'POST',
+        url: '/add_tag',
+        data: {
+            media_id: media_id,
+            tag: tag
+        }
+    }).then(function(response){
+        console.log(response);
+    });
 }
 
 function afterCreation(){
@@ -190,6 +205,64 @@ function getUserMedia(usr){
     )
 }
 
+function manageMediaItem(item){
+    let img = `<img src= "${vueApp.baseURL}/media/${item.filename}">`;
+    let fileDetails = `<div>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Filename:</td>
+                    <td>${item.filename}</td>
+                    <td>MimeType:</td>
+                    <td>${item.mime_type}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`;
+    let tagInput = `<div>
+        <input id= 'media-manager-tags'/>
+    </div>`;
+    let html = `${img}${fileDetails}${tagInput}`;
+    let lightBox = basicLightbox.create(html);
+    lightBox.show(function(instance){
+        let tInput = document.getElementById('media-manager-tags');
+        tInput.value = item.tags.join(',');
+        //tagsInput(tagger); <-tags-input.js
+        tInput.boundItem = item;
+        let tagger = new Tagify(tInput,
+            {
+                autocomplete: true,
+                callbacks: {
+                    add: function(e){
+                        let item = document.getElementById('media-manager-tags').boundItem;
+                        item.tags.push(e.detail.value);
+                        addItemTagToServer(item.filename, e.detail.value);
+                    },
+                    remove: function(e){
+                        let item = document.getElementById('media-manager-tags').boundItem;
+                        let i = 0;
+                        let matchedPositions = [];
+                        for(let t of item.tags){
+                            if(t === e.detail.value){
+                                matchedPositions.push(i);
+                            }
+                            i++;
+                        }
+                        matchedPositions.reverse(); //pretty sure iterative splicing should go from highest to lowest index position
+                        for(let j of matchedPositions){
+                            item.tags.splice(j, 1);
+                        }
+                        removeItemTagFromServer(item.filename, e.detail.value);
+                    }
+                },
+                enforceWhitelist: false,
+                suggestionsMinChars: 3,
+                whitelist: vueApp.uniqueTags,
+            }
+        );
+    });
+}
+
 function mediaType(item){
     if(item.media_type === 'image'){
         if(item.mime_type === 'image/svg+xml'){
@@ -291,6 +364,19 @@ function queryUserInput(){
     let flatParams = flattenQryParams(qryParams);
     let matchedItems = findMediaByTags(flatParams);
     vueApp.selectedMedia = matchedItems;
+}
+
+function removeItemTagFromServer(media_id, tag){
+    $http({
+        method: 'POST',
+        url: '/remove_tag',
+        data: {
+            media_id: media_id,
+            tag: tag
+        }
+    }).then(function(response){
+        console.log(response);
+    });
 }
 
 function saveSettings(e){
