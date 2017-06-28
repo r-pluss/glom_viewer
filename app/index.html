@@ -34,20 +34,6 @@
             <div id= 'glom-view' class= 'container'>
                 <div class= 'tile is-ancestor'>
                     <template v-for= "item in selectedMedia">
-                        <!--<template v-if= "mediaType(item) === 'img'">
-                            <div class= 'tile media-container'>
-                                <a class= 'media-link' target= '_blank' :href= "getGlomSource(item)">
-                                    <img :src= "getGlomSource(item)">
-                                </a>
-                            </div>
-                        </template>
-                        <template v-else-if= "mediaType(item) === 'svg'">
-                            <div class= 'tile media-container'>
-                                <a class= 'media-link' target= '_blank' :href= "getGlomSource(item)">
-                                    <img :src= "getGlomSource(item)">
-                                </a>
-                            </div>
-                        </template>-->
                         <div class= 'tile media-container' :class= "[mediaScale]">
                             <img :src= "getGlomSource(item)"
                             @click.left= "manageMediaItem(item)"
