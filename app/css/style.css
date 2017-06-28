@@ -3,6 +3,10 @@ main {
     height: 100vh;
 }
 
+.basicLightbox img {
+    overflow-y: scroll;
+}
+
 .logged-in {
     border-color: #63d3f3;
     color: #24c4ea;
@@ -29,6 +33,10 @@ main {
 
 .media-container.medium {
     max-width: 20vw;
+}
+
+.media-container.large {
+    max-width: 30vw;
 }
 
 .media-container.full {
@@ -65,13 +73,17 @@ main {
     padding: 3.5px
 }
 
+#glom-view {
+    height: auto;
+}
+
 #head-nav {
     background-color: #b387e4;
     padding: .75vh .5vw;
 }
 
-#glom-view {
-    height: auto;
+#illegal-tag-char-modal {
+    z-index: 1001;
 }
 
 #media-manager-table {
