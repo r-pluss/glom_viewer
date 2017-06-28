@@ -6,6 +6,17 @@ const appDataPath = path.join(app.getPath('userData'), 'config.json');
 
 const $http = createConnection();
 
+const qryOperators = ['+', '-', '!', '&', '(', ')', '|'];
+const qrySeparators = [','];
+const qrySpecialCharacters = Array.prototype.concat(qryOperators, qrySeparators);
+
+
+const devFlags = {
+    useBulmaModal: false
+};
+
+window._devFlags = devFlags;
+
 /*
 Vue.config.keyCodes = {
     embiggen: [107, 187],
@@ -20,7 +31,7 @@ const vueApp = new Vue({
         allMedia: [],
         baseURL: undefined,
         mediaScale: 'small',
-        mediaScales: ['small', 'medium', 'full'],
+        mediaScales: ['small', 'medium', 'large', 'full'],
         selectedMedia: [],
         tagTester: undefined, // <-- not sure what that was supposed to be for...
         uniqueTags: []
@@ -45,15 +56,6 @@ const vueApp = new Vue({
 
 //strictly for debugging ease
 window._$app = vueApp;
-
-function start(){
-    let config = getConfig();
-    if(config.hostname && config.username && config.password){
-        getUserMedia(config.username);
-    }else{
-        vueApp.showUserSettings();
-    }
-}
 
 function addItemTagToServer(media_id, tag){
     $http({
@@ -110,21 +112,18 @@ function findMediaByTags(qry){
         let inclusionFound = false;
         for(let exclusion of qry.exclude){
             if(item.tags.indexOf(exclusion) > -1){
-                //console.log('Found exclusion');
                 exclusionFound = true;
                 break;
             }
         }
         for(let requirement of qry.require){
             if(item.tags.indexOf(requirement) < 0){
-                //console.log('Requirement missing');
                 requirementMissing = true;
                 break;
             }
         }
         for(let inclusion of qry.include){
             if(item.tags.indexOf(inclusion) > -1){
-                //console.log('Found inclusion');
                 inclusionFound = true;
                 break;
             }
@@ -202,7 +201,7 @@ function getUserMedia(usr){
                 vueApp.allMedia.push(item);
             }
         }
-    )
+    );
 }
 
 function manageMediaItem(item){
@@ -233,14 +232,34 @@ function manageMediaItem(item){
     lightBox.show(function(instance){
         let tInput = document.getElementById('media-manager-tags');
         tInput.value = item.tags.join(',');
-        //tagsInput(tagger); <-tags-input.js
         tInput.boundItem = item;
+        //tagsInput(tagger); <-tags-input.js
         let tagger = new Tagify(tInput,
             {
                 autocomplete: true,
                 callbacks: {
                     add: function(e){
                         let item = document.getElementById('media-manager-tags').boundItem;
+                        for(let chr of qrySpecialCharacters){
+                            if(e.detail.value.indexOf(chr) > -1){
+                                //do not add, tag contains an illegal character
+                                let warnModal = document.createElement('div');
+                                warnModal.id = 'illegal-tag-char-modal';
+                                warnModal.classList.add('modal');
+                                warnModal.classList.add('is-active');
+                                warnModal.innerHTML = `<div class='modal-background'></div><div class='modal-content'><div class= 'notification is-warning'><button class= 'delete' id='illegal-tag-char-close-btn'></button>Tags may not contain '${chr}'</div></div></div>`;
+                                document.body.append(warnModal);
+                                let closeModal = function(){
+                                    let el = document.getElementById('illegal-tag-char-modal');
+                                    if(el){
+                                        el.parentNode.removeChild(el);
+                                    }
+                                };
+                                document.getElementById('illegal-tag-char-close-btn').addEventListener('click', closeModal);
+                                window.setTimeout(closeModal, 3000);
+                                return;
+                            }
+                        }
                         item.tags.push(e.detail.value);
                         addItemTagToServer(item.filename, e.detail.value);
                     },
@@ -254,11 +273,13 @@ function manageMediaItem(item){
                             }
                             i++;
                         }
-                        matchedPositions.reverse(); //pretty sure iterative splicing should go from highest to lowest index position
-                        for(let j of matchedPositions){
-                            item.tags.splice(j, 1);
+                        if(matchedPositions.length > 0){
+                            matchedPositions.reverse(); //pretty sure iterative splicing should go from highest to lowest index position
+                            for(let j of matchedPositions){
+                                item.tags.splice(j, 1);
+                            }
+                            removeItemTagFromServer(item.filename, e.detail.value);
                         }
-                        removeItemTagFromServer(item.filename, e.detail.value);
                     }
                 },
                 enforceWhitelist: false,
@@ -286,7 +307,8 @@ function openInBrowser(glomItem){
 }
 
 function parseSearch(qry){
-    let opTokens = ['+', '-', '!', '&', '(', ')', '|'];
+    //let opTokens = ['+', '-', '!', '&', '(', ')', '|'];
+    //changed to use file-namespaced const
     let opTokenDefs = {
         '+': 'include',
         '-': 'exclude',
@@ -294,7 +316,8 @@ function parseSearch(qry){
         '&': 'require',
         '|': 'include'
     };
-    let seps = [' ', ','];
+    //let seps = [','];
+    //changed to use file-namespaced const
     let params = {
         include: [],
         exclude: [],
@@ -308,12 +331,19 @@ function parseSearch(qry){
 
 
     //handle a couple explicit special cases first
-    if(qry === '*'){
+    if(
+        (qry.trim() === '') ||
+        (qry.trim().length === 1 && qrySpecialCharacters.indexOf(qry.trim()) > -1)
+    ){
+        //null input or invalid search terms should generate no results
+        return null;
+    }else if(qry === '*'){
+        //shortcut for "all"
         return params;
     }
     qry = qry.split('');
     for(let char of qry){
-        if(opTokens.indexOf(char) > -1){
+        if(qryOperators.indexOf(char) > -1){
             if(char === '('){
                 groupMode = true;
             }else if(char === ')'){
@@ -327,7 +357,7 @@ function parseSearch(qry){
             }else{
                 curOperator = char;
             }
-        }else if(seps.indexOf(char) > -1){
+        }else if(qrySeparators.indexOf(char) > -1){
             if(curTerm && curTerm.length > 0){
                 if(groupMode){
                     grouping.push(curTerm);
@@ -348,6 +378,18 @@ function parseSearch(qry){
     return params;
 }
 
+function queryUserInput(){
+    let qry = document.getElementById('tag-search').value;
+    let qryParams = parseSearch(qry);
+    if(qryParams === null){
+        vueApp.selectedMedia == [];
+        return;
+    }
+    let flatParams = flattenQryParams(qryParams);
+    let matchedItems = findMediaByTags(flatParams);
+    vueApp.selectedMedia = matchedItems;
+}
+
 function registerGlobalEventHandlers(){
     window.addEventListener('keyup', function(e){
         if(e.ctrlKey && ['+', '-'].indexOf(e.key) > -1){
@@ -358,18 +400,6 @@ function registerGlobalEventHandlers(){
             }
         }
     });
-}
-
-function queryUserInput(){
-    let qry = document.getElementById('tag-search').value;
-    if(qry.trim() === ''){
-        vueApp.selectedMedia = [];
-        return;
-    }
-    let qryParams = parseSearch(qry);
-    let flatParams = flattenQryParams(qryParams);
-    let matchedItems = findMediaByTags(flatParams);
-    vueApp.selectedMedia = matchedItems;
 }
 
 function removeItemTagFromServer(media_id, tag){
@@ -393,6 +423,7 @@ function saveSettings(e){
         username: document.getElementById('username').value
     };
     setConfig(conf);
+    getUserMedia();
     this.modal.close();
 }
 
@@ -447,6 +478,15 @@ function showUserSettings(){
     });
     modal.afterClose(function(mod){mod.destroy();});
     modal.show();
+}
+
+function start(){
+    let config = getConfig();
+    if(config.hostname && config.username && config.password){
+        getUserMedia(config.username);
+    }else{
+        vueApp.showUserSettings();
+    }
 }
 
 function unbiggen(){
